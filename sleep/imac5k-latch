@@ -1,0 +1,12 @@
+#!/bin/sh
+# systemd-sleep hook: after resume, re-latch the iMac 5K panel's tiled mode
+# (deep suspend powers the panel off and it comes back single-tile).
+[ "$1" = post ] || exit 0
+[ "$(cat /sys/class/dmi/id/product_name 2>/dev/null)" = "iMac15,1" ] || exit 0
+for i in 1 2 3; do
+    for s in /sys/class/drm/card*-DP-1/status; do
+        [ "$(cat "$s")" = connected ] && exit 0
+    done
+    sleep 1
+    /usr/local/sbin/imac5k-latch latch 2>&1 | logger -t imac5k-latch
+done
